@@ -717,7 +717,18 @@
       ["Increase font size" nil "cmd1 PLUS" #(grow-font app)]
       ["Decrease font size" nil "cmd1 MINUS" #(shrink-font app)]
       ["Choose font..." nil nil #(apply style/show-font-window
-                                        app set-font @current-font)])))
+                                        app set-font @current-font)])
+    (utils/add-menu menu-bar "Brevis" "B"
+      ["Pause/Play" nil nil #(println "brevis pause/play")]
+      ["Screenshot" nil nil #(println "brevis screenshot")]
+      ["Record Video" nil nil #(println "brevis record video")]
+      ["Documentation" nil nil #(println "brevis documentation")])
+    (utils/add-menu menu-bar "Tools" "T"
+      ["Rotate" nil nil #(println "select")]
+      ["Zoom" nil nil #(println "select")]
+      ["Move Camera" nil nil #(println "select")]
+      ["Select" nil nil #(println "select")])
+    ))
       
     
 (defn add-visibility-shortcut [app]
@@ -769,6 +780,9 @@
 (defn -main [& args]
   (reset! embedded false)
   (startup))
+
+(when (find-ns 'ccw.complete)
+  (-main))
 
 ;; testing
 
