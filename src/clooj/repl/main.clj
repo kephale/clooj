@@ -23,7 +23,10 @@
             [clooj.repl.external :as external]
             [clooj.repl.lein :as lein]
             [clooj.protocols :as protocols]
-            [clooj.utils :as utils]))
+            [clooj.utils :as utils]
+            [leiningen.core.classpath]
+            [leiningen.core.project]
+            ))
 
 (use 'clojure.java.javadoc)
 
@@ -207,8 +210,11 @@
 (defn start-repl [app project-path]
       (utils/append-text (app :repl-out-text-area)
                    (str "\n=== Starting new REPL at " project-path " ===\n"))
-    (let [classpath-items ;(lein/lein-classpath-items project-path)
-                          (external/repl-classpath-items project-path)
+    (let [lein-classpath-items (leiningen.core.classpath/get-classpath 
+                                 (leiningen.core.project/read (str project-path "/project.clj")))
+          classpath-items ;(lein/lein-classpath-items project-path)
+                          ;(external/repl-classpath-items project-path)          
+                          lein-classpath-items
           repl ;(lein/lein-repl project-path (app :repl-out-writer))
                (external/repl project-path classpath-items 
                               (app :repl-out-writer))
@@ -227,7 +233,10 @@
   (when-not @(:repl app)
     (start-repl app (first (project/get-selected-projects app))))
   (when-let [current-ns (get-file-ns app)]
-    (send-to-repl app (str "(ns " current-ns ")") true)))
+    (send-to-repl app (str "(ns " current-ns ")") true))
+  (when-let [current-ns (get-file-ns app)]
+    #_(Thread/sleep 10000)
+    (send-to-repl app (str "(use '" current-ns " :reload)") false)))
 
 (defn restart-repl [app project-path]
   (stop-repl app)

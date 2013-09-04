@@ -72,7 +72,7 @@
 
 (defn get-var-maps [project-path classpath]
   (make-var-super-map
-      (mapcat vars/analyze-clojure-source
+      (mapcat #(vars/analyze-clojure-source :clojure %)
               (concat
                 (get-sources-from-jars project-path classpath)
                 (get-sources-from-clj-files classpath)))))
