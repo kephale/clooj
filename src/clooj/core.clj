@@ -309,11 +309,12 @@
 
 (def no-project-txt
     "\n Welcome to clooj, a lightweight IDE for clojure\n
-     To start coding, you can either\n
+     To start coding, you can\n
        a. create a new project
             (select the Project > New... menu), or
        b. open an existing project
             (select the Project > Open... menu)\n
+       c. import from a git URI
      and then either\n
        a. create a new file
             (select the File > New menu), or
@@ -329,6 +330,45 @@
 
 (defn open-project [app]
   (when-let [dir (utils/choose-directory (app :f) "Choose a project directory")]
+    (let [project-dir (if (= (.getName dir) "src") (.getParentFile dir) dir)]
+      (utils/write-value-to-prefs utils/clooj-prefs "last-open-dir" (.getAbsolutePath (.getParentFile project-dir)))
+      (project/add-project app (.getAbsolutePath project-dir))
+      (project/update-project-tree (:docs-tree app))
+      (when-let [clj-file (or (-> (File. project-dir "src")
+                                 .getAbsolutePath
+                                 (project/get-code-files ".clj")
+                                 first)
+                              project-dir)]
+        (utils/awt-event (project/set-tree-selection (app :docs-tree) (.getAbsolutePath clj-file)))))))
+
+(defn import-project [app]
+  (when-let [dir (utils/choose-directory (app :f) "Import a project from a git URI")]
+    (let [project-dir (if (= (.getName dir) "src") (.getParentFile dir) dir)]
+      (utils/write-value-to-prefs utils/clooj-prefs "last-open-dir" (.getAbsolutePath (.getParentFile project-dir)))
+      (project/add-project app (.getAbsolutePath project-dir))
+      (project/update-project-tree (:docs-tree app))
+      (when-let [clj-file (or (-> (File. project-dir "src")
+                                 .getAbsolutePath
+                                 (project/get-code-files ".clj")
+                                 first)
+                              project-dir)]
+        (utils/awt-event (project/set-tree-selection (app :docs-tree) (.getAbsolutePath clj-file)))))))
+
+(defn marg-project [app]
+  (when-let [dir (utils/choose-directory (app :f) "Use Marg to compile documentation for a project")]
+    (let [project-dir (if (= (.getName dir) "src") (.getParentFile dir) dir)]
+      (utils/write-value-to-prefs utils/clooj-prefs "last-open-dir" (.getAbsolutePath (.getParentFile project-dir)))
+      (project/add-project app (.getAbsolutePath project-dir))
+      (project/update-project-tree (:docs-tree app))
+      (when-let [clj-file (or (-> (File. project-dir "src")
+                                 .getAbsolutePath
+                                 (project/get-code-files ".clj")
+                                 first)
+                              project-dir)]
+        (utils/awt-event (project/set-tree-selection (app :docs-tree) (.getAbsolutePath clj-file)))))))
+
+(defn view-docs-project [app]
+  (when-let [dir (utils/choose-directory (app :f) "Use Marg to compile documentation for a project")]
     (let [project-dir (if (= (.getName dir) "src") (.getParentFile dir) dir)]
       (utils/write-value-to-prefs utils/clooj-prefs "last-open-dir" (.getAbsolutePath (.getParentFile project-dir)))
       (project/add-project app (.getAbsolutePath project-dir))
@@ -687,6 +727,9 @@
     (utils/add-menu menu-bar "Project" "P"
       ["New..." "N" "cmd1 shift N" #(new-project app)]
       ["Open..." "O" "cmd1 shift O" #(open-project app)]
+      ["Import from git..." nil nil #(import-project app)]
+      ["Marg docs" nil nil #(marg-project app)]
+      ["Display project docs" nil nil #(view-docs-project app)]
       ["Move/Rename" "M" nil #(project/rename-project app)]
       ["Remove" nil nil #(remove-project app)])
     (utils/add-menu menu-bar "Source" "U"

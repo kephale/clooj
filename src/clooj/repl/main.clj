@@ -26,6 +26,7 @@
             [clooj.utils :as utils]
             [leiningen.core.classpath]
             [leiningen.core.project]
+            [leiningen.checkouts]
             ))
 
 (use 'clojure.java.javadoc)
@@ -207,11 +208,24 @@
         (str (second sexpr))))
     (catch Exception e)))
 
+(defn get-classpath-with-checkouts
+  "Return the classpath for this project and checkouts/"
+  [project-path]
+  (let [project (leiningen.core.project/read (str project-path "/project.clj"))
+        task "classpath"]
+    (if project      
+      (-> project
+        leiningen.checkouts/build-checkouts-map
+        leiningen.checkouts/create-checkout-build-seq
+        (leiningen.checkouts/build-checkouts task))        
+      (println "Error: No project specified!"))))
+
 (defn start-repl [app project-path]
       (utils/append-text (app :repl-out-text-area)
                    (str "\n=== Starting new REPL at " project-path " ===\n"))
     (let [lein-classpath-items (leiningen.core.classpath/get-classpath 
                                  (leiningen.core.project/read (str project-path "/project.clj")))
+          lein-checkouts-classpath-items (get-classpath-with-checkouts project-path)                                                                        
           classpath-items ;(lein/lein-classpath-items project-path)
                           ;(external/repl-classpath-items project-path)          
                           lein-classpath-items
@@ -219,6 +233,7 @@
                (external/repl project-path classpath-items 
                               (app :repl-out-writer))
           ]
+      (println classpath-items)
       (initialize-repl repl)
       (help/update-var-maps! project-path classpath-items)
       (reset! (:repl app) repl)))

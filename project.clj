@@ -15,4 +15,7 @@
                  [leiningen-core "2.3.2"]
                  ;; From clj-inspector
                  [org.clojure/data.zip "0.1.1"]
+                 
+                 [leiningen "2.3.2"]
+                 [lein-checkouts "1.1.0"]
                  ])
