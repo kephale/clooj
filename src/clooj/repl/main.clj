@@ -27,6 +27,8 @@
             [leiningen.core.classpath]
             [leiningen.core.project]
             [leiningen.checkouts]
+            [leiningen.core.main :only (apply-task task-not-found)]
+            [clojure.string :as string]
             ))
 
 (use 'clojure.java.javadoc)
@@ -208,6 +210,32 @@
         (str (second sexpr))))
     (catch Exception e)))
 
+;; following 3 derived from https://github.com/guv/lein-checkouts/blob/master/src/leiningen/checkouts.clj
+(defn perform-lein-task
+  [task-name, project]
+  (leiningen.core.main/apply-task task-name (:data project) [])
+  )
+
+(defn classpath-checkouts
+  [build-seq, task]
+  (loop [rem build-seq
+         cp-seq []]
+    (if (empty? rem)
+      ;(apply concat cp-seq)
+      #_(reduce string/join "" cp-seq)
+      cp-seq
+      (let [p (first rem)
+            project-conf (str (:dir p) "/project.clj")
+            lein-classpath-items (leiningen.core.classpath/get-classpath
+                                   ;p)]
+                                   (leiningen.core.project/read project-conf))]
+        #_(println (format "[PROCESSING] project \"%s\"" (:name p)))
+        #_(println (keys p))
+        #_(println p)
+        ;(println lein-classpath-items)
+        (recur (rest rem)
+               (conj cp-seq lein-classpath-items))))))
+
 (defn get-classpath-with-checkouts
   "Return the classpath for this project and checkouts/"
   [project-path]
@@ -217,7 +245,7 @@
       (-> project
         leiningen.checkouts/build-checkouts-map
         leiningen.checkouts/create-checkout-build-seq
-        (leiningen.checkouts/build-checkouts task))        
+        (classpath-checkouts task))        
       (println "Error: No project specified!"))))
 
 (defn start-repl [app project-path]
@@ -233,9 +261,10 @@
                (external/repl project-path classpath-items 
                               (app :repl-out-writer))
           ]
-      (println classpath-items)
+      #_(println "Local:" classpath-items)
+      #_(println "Checkouts:" lein-checkouts-classpath-items)
       (initialize-repl repl)
-      (help/update-var-maps! project-path classpath-items)
+      (help/update-var-maps! project-path lein-checkouts-classpath-items)
       (reset! (:repl app) repl)))
 
 (defn stop-repl [app]

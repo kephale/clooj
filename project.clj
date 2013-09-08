@@ -11,6 +11,7 @@
                  ;[com.cemerick/pomegranate "0.0.11"]
                  [com.cemerick/pomegranate "0.2.0"]
                  [com.fifesoft/rsyntaxtextarea "2.0.2"]
+                 ;[org.fife.ui/rsyntaxtextarea "2.0.4.1"]
                  [org.clojure/tools.nrepl "0.2.2"]
                  [leiningen-core "2.3.2"]
                  ;; From clj-inspector

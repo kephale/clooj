@@ -27,6 +27,7 @@
                                         TokenMakerFactory)	
            (org.fife.ui.rtextarea RTextScrollPane))
   (:require [clojure.set]
+            [clojure.java.browse]
             [clooj.repl.main :as repl]
             [clooj.repl.output :as repl-output]
             [clooj.utils :as utils]
@@ -597,7 +598,8 @@
 "
 (defproject PROJECTNAME \"1.0.0-SNAPSHOT\"
   :description \"FIXME: write\"
-  :dependencies [[org.clojure/clojure \"1.3.0\"]])
+  :dependencies [[org.clojure/clojure \"1.5.1\"]
+                 [brevis \"0.3.1-SNAPSHOT\"]])
 "))
       
 (defn specify-source [project-dir title default-namespace]
@@ -710,6 +712,33 @@
         (project/set-tree-selection (:docs-tree app) (.getAbsolutePath file)))
       (utils/scroll-to-line text-comp line))))
 
+;;; Brevis specific start
+
+(defn launch-brevis-documentation
+  "Open documentation in a browser."
+  []
+  (let [url "http://scott.cs-i.brandeis.edu/brevis"]
+    (clojure.java.browse/browse-url url)
+    #_(open-url-in-browser url)))
+
+(defn brevis-pause-play
+  "Start a brevis simulation"
+  [app]
+  (repl/send-to-repl app "(-main)" true))
+
+(defn brevis-screenshot
+  "Take a screenshot of the current brevis window."
+  [app]
+  #_(repl/send-to-repl app "*gui-state*" false)
+  (repl/send-to-repl app "(screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
+
+(defn brevis-record-video
+  "Take a screenshot of the current brevis window."
+  [app]
+  (repl/send-to-repl app "(screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
+
+;;; Brevis specific stop
+
 (defn make-menus [app]
   (when (utils/is-mac)
     (System/setProperty "apple.laf.useScreenMenuBar" "true"))
@@ -762,11 +791,12 @@
       ["Choose font..." nil nil #(apply style/show-font-window
                                         app set-font @current-font)])
     (utils/add-menu menu-bar "Brevis" "B"
-      ["Pause/Play" nil nil #(println "brevis pause/play")]
-      ["Screenshot" nil nil #(println "brevis screenshot")]
-      ["Record Video" nil nil #(println "brevis record video")]
-      ["Documentation" nil nil #(println "brevis documentation")])
-    (utils/add-menu menu-bar "Tools" "T"
+      #_["Pause/Play" nil nil #(println "brevis pause/play")]
+      ["Pause/Play" nil nil #(brevis-pause-play app)]
+      ["Screenshot" nil nil #(brevis-screenshot app)]
+      ["Record Video" nil nil #(brevis-record-video app)]
+      ["Documentation" nil nil #(launch-brevis-documentation)])
+    #_(utils/add-menu menu-bar "Tools" "T"
       ["Rotate" nil nil #(println "select")]
       ["Zoom" nil nil #(println "select")]
       ["Move Camera" nil nil #(println "select")]
