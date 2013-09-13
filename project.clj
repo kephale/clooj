@@ -17,6 +17,7 @@
                  ;; From clj-inspector
                  [org.clojure/data.zip "0.1.1"]
                  
+                 [clj-jgit "0.3.9"]
                  [leiningen "2.3.2"]
                  [lein-checkouts "1.1.0"]
                  ])

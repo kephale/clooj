@@ -28,6 +28,8 @@
            (org.fife.ui.rtextarea RTextScrollPane))
   (:require [clojure.set]
             [clojure.java.browse]
+            [clj-jgit.util :as git-util]
+            [clj-jgit.porcelain :as git-porcelain]
             [clooj.repl.main :as repl]
             [clooj.repl.output :as repl-output]
             [clooj.utils :as utils]
@@ -343,17 +345,24 @@
         (utils/awt-event (project/set-tree-selection (app :docs-tree) (.getAbsolutePath clj-file)))))))
 
 (defn import-project [app]
-  (when-let [dir (utils/choose-directory (app :f) "Import a project from a git URI")]
-    (let [project-dir (if (= (.getName dir) "src") (.getParentFile dir) dir)]
-      (utils/write-value-to-prefs utils/clooj-prefs "last-open-dir" (.getAbsolutePath (.getParentFile project-dir)))
-      (project/add-project app (.getAbsolutePath project-dir))
-      (project/update-project-tree (:docs-tree app))
-      (when-let [clj-file (or (-> (File. project-dir "src")
-                                 .getAbsolutePath
-                                 (project/get-code-files ".clj")
-                                 first)
-                              project-dir)]
-        (utils/awt-event (project/set-tree-selection (app :docs-tree) (.getAbsolutePath clj-file)))))))
+  (let [field1  (JTextField. "https://github.com/kephale/brevis.git")
+        field2 (JTextField. "test-brevis")
+        panel (JPanel. (GridLayout. 0, 1))]
+    (.add panel (JLabel. "Git repository:"))
+    (.add panel field1)
+    (.add panel (JLabel. "Destination directory:"))
+    (.add panel field2)
+    (let [result (JOptionPane/showConfirmDialog nil panel "Import project from git"
+                                                JOptionPane/OK_CANCEL_OPTION JOptionPane/PLAIN_MESSAGE)]
+      (when (= result JOptionPane/OK_OPTION)
+        (let [git-repo  (.getText field1) 
+              local-dir (.getText field2)
+              repo (git-porcelain/git-clone-full git-repo local-dir)
+              ]
+          (println "git repo:" git-repo)
+          (println "local dir:" local-dir)          
+          (project/add-project app (.getAbsolutePath (File. local-dir)))
+          (project/update-project-tree (:docs-tree app)))))))
 
 (defn marg-project [app]
   (when-let [dir (utils/choose-directory (app :f) "Use Marg to compile documentation for a project")]
