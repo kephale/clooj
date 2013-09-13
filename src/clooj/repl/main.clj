@@ -251,6 +251,8 @@
 (defn start-repl [app project-path]
       (utils/append-text (app :repl-out-text-area)
                    (str "\n=== Starting new REPL at " project-path " ===\n"))
+      (leiningen.core.main/apply-task "javac" (leiningen.core.project/read (str project-path "/project.clj")) [])
+      (leiningen.core.main/apply-task "compile" (leiningen.core.project/read (str project-path "/project.clj")) [])      
     (let [lein-classpath-items (leiningen.core.classpath/get-classpath 
                                  (leiningen.core.project/read (str project-path "/project.clj")))
           lein-checkouts-classpath-items (get-classpath-with-checkouts project-path)                                                                        

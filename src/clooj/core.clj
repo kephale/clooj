@@ -346,7 +346,7 @@
 
 (defn import-project [app]
   (let [field1  (JTextField. "https://github.com/kephale/brevis.git")
-        field2 (JTextField. "test-brevis")
+        field2 (JTextField. "brevis")
         panel (JPanel. (GridLayout. 0, 1))]
     (.add panel (JLabel. "Git repository:"))
     (.add panel field1)
@@ -357,10 +357,10 @@
       (when (= result JOptionPane/OK_OPTION)
         (let [git-repo  (.getText field1) 
               local-dir (.getText field2)
-              repo (git-porcelain/git-clone-full git-repo local-dir)
+              repo (if (empty? local-dir)
+                     (git-porcelain/git-clone-full git-repo)
+                     (git-porcelain/git-clone-full git-repo local-dir))
               ]
-          (println "git repo:" git-repo)
-          (println "local dir:" local-dir)          
           (project/add-project app (.getAbsolutePath (File. local-dir)))
           (project/update-project-tree (:docs-tree app)))))))
 
@@ -432,7 +432,7 @@
         search-text-area (JTextField.)
         arglist-label (create-arglist-label)
         pos-label (JLabel.)
-        frame (JFrame.)
+        frame (JFrame.) 
         cp (.getContentPane frame)
         layout (SpringLayout.)
         docs-tree (JTree.)
@@ -481,11 +481,14 @@
         doc-text-area (new-doc-text-area app)
         doc-scroll-pane (make-scroll-pane doc-text-area)
         app (assoc app :doc-text-area doc-text-area)]
+    (System/setProperty "apple.laf.useScreenMenuBar" "true")
+    (System/setProperty "com.apple.mrj.application.apple.menu.about.name" "clooj-brevis")
+    ;(UIManager/setLookAndFeel (UIManager/getSystemLookAndFeelClassName))
     (doto frame
       (.setBounds 25 50 950 700)
       (.setLayout layout)
       (.add split-pane)
-      (.setTitle (str "clooj " (get-clooj-version))))
+      (.setTitle (str "clooj-brevis " (get-clooj-version))))
     (doto doc-text-panel
       (.setLayout (SpringLayout.))
       (.add doc-scroll-pane)
@@ -726,7 +729,7 @@
 (defn launch-brevis-documentation
   "Open documentation in a browser."
   []
-  (let [url "http://scott.cs-i.brandeis.edu/brevis"]
+  (let [url "http://golemics.org/brevis"]
     (clojure.java.browse/browse-url url)
     #_(open-url-in-browser url)))
 
@@ -739,12 +742,12 @@
   "Take a screenshot of the current brevis window."
   [app]
   #_(repl/send-to-repl app "*gui-state*" false)
-  (repl/send-to-repl app "(screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
+  (repl/send-to-repl app "(brevis-screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
 
 (defn brevis-record-video
   "Take a screenshot of the current brevis window."
   [app]
-  (repl/send-to-repl app "(screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
+  (repl/send-to-repl app "(brevis-screenshot \"brevisclooj_screenshot.png\" @*gui-state*)" true))
 
 ;;; Brevis specific stop
 
@@ -766,8 +769,8 @@
       ["New..." "N" "cmd1 shift N" #(new-project app)]
       ["Open..." "O" "cmd1 shift O" #(open-project app)]
       ["Import from git..." nil nil #(import-project app)]
-      ["Marg docs" nil nil #(marg-project app)]
-      ["Display project docs" nil nil #(view-docs-project app)]
+      #_["Marg docs" nil nil #(marg-project app)]
+      #_["Display project docs" nil nil #(view-docs-project app)]
       ["Move/Rename" "M" nil #(project/rename-project app)]
       ["Remove" nil nil #(remove-project app)])
     (utils/add-menu menu-bar "Source" "U"
@@ -803,7 +806,7 @@
       #_["Pause/Play" nil nil #(println "brevis pause/play")]
       ["Pause/Play" nil nil #(brevis-pause-play app)]
       ["Screenshot" nil nil #(brevis-screenshot app)]
-      ["Record Video" nil nil #(brevis-record-video app)]
+      #_["Record Video" nil nil #(brevis-record-video app)]
       ["Documentation" nil nil #(launch-brevis-documentation)])
     #_(utils/add-menu menu-bar "Tools" "T"
       ["Rotate" nil nil #(println "select")]
